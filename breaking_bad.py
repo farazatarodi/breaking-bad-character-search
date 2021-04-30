@@ -1,6 +1,11 @@
 import sys
 import requests as req
 
+"""
+some explanation:
+
+"""
+
 
 def call(arr):
     # get all episodes
