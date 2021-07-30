@@ -4,19 +4,17 @@ import requests as req
 """
 some explanation:
 
-First when I saw the description I assumed that the characters have an episode attribute.
-However this was not the case, so I had to check characters in each episode. My intial plan was to send request for each episode,
-but that is not optimal (There is a limit for requests from the API).
-I got the list of all episodes and went through them and checked the characters for a match. Created a dictionary with the number
-of occurance for each episode and used the occurance to compare with the number of the characters that we are looking for.
-This way we are not limited to maximum 2 characters.
-Next I created a list of all common episodes between characters and used those episode IDs for getting the data from the intial request.
-One thing I want to mention is that I assumed that an episode with ID 'i' is the episode with index 'i-1' in thr request dictionary.
-I could code it in a way that it would find the episode ID but it required extra work and extra loops.
-(I just wanted to let you know that I did it on purpose, don't judge me)
-Then I simply formatted a string for the output. Finally I checked the status code in case that we get an error from the server.
-I checked the output with pytest and it was 100%. B)
-That's it!
+First, when I saw the description I assumed that the characters have an episode attribute. However this was not
+the case, so I had to check characters in each episode. My initial plan was to send a request for each episode,
+but that is not optimal (There is a limit for requests from the API). I got the list of all episodes with one
+request and went through them and checked the characters for a match. If the input character set is the subset
+of the episode character set, then the ID of the episode will be added to a common episodes list. This way we
+are not limited to a maximum of 2 characters. I used those episode IDs for getting the data from the initial request.
+One thing I want to mention is that I assumed that an episode with ID 'i' is the episode with the index 'i-1'
+in the request dictionary. I could code it in a way that it would find the episode ID but it required extra work
+and extra loops. (I just wanted to let you know that I did it on purpose, don't judge me) Then I simply formatted
+a string for the output. Finally, I added a status code check in case that we get an error from the server.
+I checked the output with pytest and it was 100%. That's it!
 """
 
 
@@ -25,27 +23,17 @@ def call(arr):
     rEps = req.get(
         'https://www.breakingbadapi.com/api/episodes?series=Breaking+Bad')
 
-    epIds = {}
     commonEps = []
 
     # check status code
     if rEps.status_code == 200:
-        # weirdly json outputs a list
         rEpsJson = rEps.json()
 
-        # iterate through episodes and check existence of each character
+       # iterate through episodes and check if character list is subset of episode character list
         for ep in rEpsJson:
-            epIds[ep['episode_id']] = 0
-            for char in arr:
-                # if character is present, add to temporary list
-                if char in ep['characters']:
-                    epIds[ep['episode_id']] += 1
-
-        # iterate through temporary list to find common episodes
-        for epId, count in epIds.items():
-            # add common eps to final list
-            if count == len(arr) and len(arr) != 0:
-                commonEps.append(epId)
+            if set(arr).issubset(set(ep['characters'])) and arr:
+                # add episode id to common episodes list
+                commonEps.append(ep['episode_id'])
 
         # create the output list using the episode ID list
         output = []
